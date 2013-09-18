@@ -45,6 +45,8 @@ class FlaskApplicationProvider(WsgiMixin, ApplicationProvider):
         return app
 
     def buildout(self, builder):
+        # TODO: Accept a builder for URL registration only.
+        # TODO: Add url_for as a dependency.
         app = self.get_app()
         self.endpoints = {}
         for rule in builder.routes:

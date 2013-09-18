@@ -84,6 +84,7 @@ class SessionMixin(object):
 
     def get_session(self, name=None):
         if not hasattr(self, 'session'):
+            # TODO: Move request session into own extensible hooks.
             flask_session = flask.session._get_current_object()
             session_uid = flask_session.get('session_uid')
             load_session = self.partial(self.load_session)

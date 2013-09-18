@@ -33,7 +33,7 @@ import code
 import importlib
 import re
 
-# TODO:
+# TODO: Establish a cookie jar or flatfile alternative for `call` sessions.
 # try:
 #     from http.cookiejar import FileCookieJar
 # except ImportError:
@@ -50,12 +50,13 @@ from .web import FlaskApplicationProvider
 
 
 class CommandRequestProvider(SessionMixin, UserMixin, RequestProvider):
-    # TODO
+    # TODO: Implement non-Flask request provider using command-line arguments.
+    # TODO: Set 'Accept: text/plain' header.
     pass
 
 
 class CommandApplicationProvider(ApplicationProvider):
-    # TODO
+    # TODO: Implement non-Flask provider using command-line arguments.
     def buildout(self, builder):
         pass
 
@@ -140,7 +141,7 @@ class DocoptProvider(jeni.BaseProvider):
     data='data',
     headers='header')
 def call(app_provider, route, cookie_jar=None, data=None, headers=None):
-    # TODO
+    # TODO: Implement direct call from command line.
     print(app_provider)
     pass
 
