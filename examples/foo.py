@@ -1,10 +1,10 @@
 import pprint
 
-from flask_kit import Builder, FlaskApplicationProvider
-from flask_kit import ApplicationProvider, RequestProvider
-from flask_kit.render import relative_folder
-from flask_kit.session import start_session
-from flask_kit.user import User
+from flask_kit.web import FlaskApplicationProvider
+from dip_kit import ApplicationProvider, Builder, RequestProvider
+from dip_kit.render import relative_folder
+from dip_kit.session import start_session
+from dip_kit.user import User
 
 
 builder = Builder()
@@ -66,7 +66,7 @@ builder.config.update(config)
 
 
 if __name__ == '__main__':
-    from flask_kit.relational import Base
+    from dip_kit.relational import Base
 
     @ApplicationProvider.annotate('relational_engine')
     def create_tables(engine):

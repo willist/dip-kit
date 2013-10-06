@@ -2,7 +2,7 @@ from os import path
 
 from setuptools import setup
 
-from flask_kit import __version__
+from dip_kit import __version__
 
 
 CLASSIFIERS = [
@@ -26,15 +26,15 @@ with open(path.join(path.dirname(__file__), README)) as fd:
 
 
 setup(
-    name='Flask-Kit',
+    name='dip-kit',
     version=__version__,
-    url='https://github.com/rduplain/flask-kit',
+    url='https://github.com/rduplain/dip-kit',
     license='BSD',
     author='Ron DuPlain',
     author_email='ron.duplain@gmail.com',
-    description='dependency injection (dip) using Flask',
+    description='dependency injection (dip) kit with Flask implementation',
     long_description=long_description,
-    packages=['flask_kit'],
+    packages=['dip_kit', 'flask_kit'],
     install_requires=[
         'Flask>=0.10',
         'Flask-Mail>=0.9',
@@ -43,6 +43,6 @@ setup(
         'jeni>=0.2',
     ],
     entry_points={
-        'console_scripts': ['flask-kit = flask_kit.command:main'],
+        'console_scripts': ['dip-kit = dip_kit.command:main'],
     },
     classifiers=CLASSIFIERS)

@@ -43,10 +43,9 @@ import jeni
 
 from docopt import docopt
 
-from .provider import ApplicationProvider, RequestProvider
-from .session import SessionMixin
-from .user import UserMixin
-from .web import FlaskApplicationProvider
+from dip_kit.provider import ApplicationProvider, RequestProvider
+from dip_kit.session import SessionMixin
+from dip_kit.user import UserMixin
 
 
 class CommandRequestProvider(SessionMixin, UserMixin, RequestProvider):
@@ -99,6 +98,7 @@ class DocoptProvider(jeni.BaseProvider):
         return self.app_provider
 
     def get_flask_app_provider(self):
+        from flask_kit.web import FlaskApplicationProvider
         if hasattr(self, 'flask_app_provider'):
             return self.flask_app_provider
         self.flask_app_provider = FlaskApplicationProvider(self.load_builder())

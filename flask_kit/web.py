@@ -2,10 +2,10 @@ import flask
 import jeni
 import werkzeug
 
-from .provider import ApplicationProvider, RequestProvider
-from .session import SessionMixin
-from .user import UserMixin
-from .wsgi import WsgiMixin
+from dip_kit.provider import ApplicationProvider, RequestProvider
+from dip_kit.session import SessionMixin
+from dip_kit.user import UserMixin
+from dip_kit.wsgi import WsgiMixin
 
 
 class FlaskRequestProvider(SessionMixin, UserMixin, RequestProvider):
