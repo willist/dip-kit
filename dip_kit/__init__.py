@@ -7,7 +7,6 @@ from . import relational
 from . import render
 from . import session
 from . import user
-from . import wsgi
 
 from .build import Builder
 from .provider import ApplicationProvider, RequestProvider
@@ -24,7 +23,6 @@ __all__ = [
     'render',
     'session',
     'user',
-    'wsgi',
     'ApplicationProvider',
     'Builder',
     'RequestProvider',

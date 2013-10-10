@@ -81,13 +81,16 @@ class SessionMixin(object):
         session.data = data
         db.commit()
 
+    def get_session_uid(self):
+        raise NotImplementedError('Get persisted session uid via application.')
+
+    def set_session_uid(self, session_uid):
+        raise NotImplementedError('Persist session uid via application.')
+
     def get_session(self, name=None):
         if not hasattr(self, 'session'):
-            # TODO: Add request-persisted session via extensible hooks.
-            # flask_session = flask.session._get_current_object()
-            # session_uid = flask_session.get('session_uid')
-            # load_session = self.partial(self.load_session)
-            session_uid = None
+            session_uid = self.get_session_uid()
+            load_session = self.partial(self.load_session)
             self.session = load_session(session_uid)
         if self.session is jeni.UNSET:
             return jeni.UNSET
@@ -101,13 +104,16 @@ class SessionMixin(object):
 
     def close_session(self):
         if not hasattr(self, 'session'):
+            self.set_session_uid(None)
             return
 
-        # TODO: Add request-persisted session via extensible hooks.
-        # flask_session = flask.session._get_current_object()
-        # flask_session['session_uid'] = self.session['uid']
+        if self.session is jeni.UNSET:
+            self.set_session_uid(None)
+            return
 
         # Persist session data in Session model's table.
         if self.session != getattr(self, 'session_start', None):
             save_session = self.partial(self.save_session)
             save_session(self.session)
+
+        self.set_session_uid(self.session['uid'])

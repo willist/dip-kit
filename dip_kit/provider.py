@@ -34,7 +34,7 @@ class ApplicationProvider(
             msg = '{} is missing in ApplicationProvider config'.format(key)
             raise KeyError(msg)
 
-    def build_app(self, config):
+    def build_app(self, builder):
         raise NotImplementedError('Implement app in subclass.')
 
     def buildout(self, builder):
@@ -42,13 +42,16 @@ class ApplicationProvider(
 
     def get_app(self):
         if self.app is None:
-            self.app = self.build_app(self.config)
+            self.app = self.build_app(self.builder)
         return self.app
 
     def get_config(self, name=None):
         if name is not None:
             return self.config.get(name, jeni.UNSET)
         return self.config
+
+    def get_wsgi(self):
+        raise NotImplementedError('WSGI application')
 
 
 class RequestProvider(RelationalQueryMixin, jeni.BaseProvider):
@@ -60,7 +63,7 @@ class RequestProvider(RelationalQueryMixin, jeni.BaseProvider):
         raise NotImplementedError('request user')
 
     def get_session(self, name=None):
-        raise NotImplementedError('request session')
+        raise NotImplementedError('request user session')
 
     def get_args(self, name=None):
         raise NotImplementedError('request args')

@@ -2,7 +2,6 @@
 
 Usage:
   dip-kit call [-c COOKIE_JAR] [-d FORMDATA...] [-H HEADER...] BUILDER ROUTE
-  dip-kit runserver [--host=HOST] [--port=PORT] [--no-debug] BUILDER
   dip-kit shell BUILDER
   dip-kit wsgi BUILDER
 
@@ -61,7 +60,6 @@ class CommandApplicationProvider(ApplicationProvider):
 
 class DocoptProvider(jeni.BaseProvider):
     accessor_re = re.compile(r'^get_(.*)')
-    app_provider_class = CommandApplicationProvider
 
     def __init__(self, arguments):
         self.arguments = arguments
@@ -70,8 +68,6 @@ class DocoptProvider(jeni.BaseProvider):
         arguments = self.arguments
         if arguments['call'] is True:
             self.apply(call)
-        elif arguments['runserver'] is True:
-            self.apply(runserver)
         elif arguments['shell'] is True:
             self.apply(shell)
         elif arguments['wsgi'] is True:
@@ -88,12 +84,14 @@ class DocoptProvider(jeni.BaseProvider):
             raise ValueError(msg)
         modname, varname = builder.split(':', 1)
         module = importlib.import_module(modname)
-        return getattr(module, varname)
+        self.builder = getattr(module, varname)
+        return self.builder
 
     def get_app_provider(self):
         if hasattr(self, 'app_provider'):
             return self.app_provider
-        self.app_provider = self.app_provider_class(self.load_builder())
+        builder = self.load_builder()
+        self.app_provider = builder.build_provider()
         return self.app_provider
 
     def build_accessor(self, argument):
@@ -110,20 +108,24 @@ class DocoptProvider(jeni.BaseProvider):
             value = arguments[optname]
             if value is None:
                 value = jeni.UNSET
+        else:
+            return None
         def accessor(value=value):
             return value
         return accessor
 
     def __getattr__(self, name):
-        cls = jeni.BaseProvider
-        if name in dir(self):
-            # Attribute is defined on self.
-            return cls.__getattr__(self, name)
-        match = self.accessor_re.search(name)
-        if match is None:
-            # Do not attempt to build accessor.
-            return cls.__getattr__(self, name)
-        return self.build_accessor(match.group(1))
+        try:
+            return jeni.BaseProvider.__getattr__(self, name)
+        except AttributeError:
+            match = self.accessor_re.search(name)
+            if match is None:
+                # Do not attempt to build accessor.
+                return object.__getattribute__(self, name)
+            accessor = self.build_accessor(match.group(1))
+            if accessor is not None:
+                return accessor
+            return object.__getattribute__(self, name)
 
 
 @DocoptProvider.annotate(
@@ -161,14 +163,14 @@ def wsgi(path, file=None):
         "modname, varname = builder_name.split(':', 1)\n"
         "module = importlib.import_module(modname)\n"
         "builder = getattr(module, varname)\n"
-        "raise NotImplementedError('work in progress')"
-        "app = None").format(
+        "app = builder.build_provider().get_wsgi()").format(
             builder_name=path,
             version_string=build_version_string())
     if file is None:
-        print(script, flush=True)
+        print(script)
     else:
-        print(script, file=file, flush=True)
+        print(script, file=file)
+        file.flush()
 
 
 def build_version_string(version=None):
@@ -184,3 +186,7 @@ def main(argv=None):
         argv = sys.argv[1:]
     version = build_version_string()
     DocoptProvider(docopt(__doc__, argv=argv, version=version)).dispatch()
+
+
+if __name__ == '__main__':
+    main()
