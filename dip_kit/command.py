@@ -1,17 +1,16 @@
-"""Flask Kit: a jeni-based dependency injection implementation using Flask.
+"""dip-kit: jeni-based dependency injection (dip) kit with common dependencies.
 
 Usage:
-  flask-kit call [-c COOKIE_JAR] [-d FORMDATA...] [-H HEADER...] BUILDER ROUTE
-  flask-kit runserver [--host=HOST] [--port=PORT] [--no-debug] BUILDER
-  flask-kit shell BUILDER
-  flask-kit wsgi BUILDER
+  dip-kit call [-c COOKIE_JAR] [-d FORMDATA...] [-H HEADER...] BUILDER ROUTE
+  dip-kit runserver [--host=HOST] [--port=PORT] [--no-debug] BUILDER
+  dip-kit shell BUILDER
+  dip-kit wsgi BUILDER
 
 Commands:
   call       Directly call the handler at a given route (non-HTTP/non-WSGI).
-  runserver  Run the Flask development server, i.e. app.run(...).
-  shell      Run a Python interactive interpreter inside Flask app context.
+  shell      Run Python interactive interpreter with a request provider.
   wsgi       Generate WSGI script to stdout for direct use with e.g. gunicorn.
-             `flask-kit wsgi BUILDER > wsgi.py && gunicorn wsgi:app`
+             `dip-kit wsgi BUILDER > wsgi.py && gunicorn wsgi:app`
 
 Arguments:
   BUILDER  Dotted path MODULE_NAME:VARIABLE_NAME referencing Builder instance.
@@ -49,13 +48,13 @@ from dip_kit.user import UserMixin
 
 
 class CommandRequestProvider(SessionMixin, UserMixin, RequestProvider):
-    # TODO: Implement non-Flask request provider using command-line arguments.
+    # TODO: Implement non-web request provider using command-line arguments.
     # TODO: Set 'Accept: text/plain' header.
     pass
 
 
 class CommandApplicationProvider(ApplicationProvider):
-    # TODO: Implement non-Flask provider using command-line arguments.
+    # TODO: Implement non-web provider using command-line arguments.
     def buildout(self, builder):
         pass
 
@@ -96,13 +95,6 @@ class DocoptProvider(jeni.BaseProvider):
             return self.app_provider
         self.app_provider = self.app_provider_class(self.load_builder())
         return self.app_provider
-
-    def get_flask_app_provider(self):
-        from flask_kit.web import FlaskApplicationProvider
-        if hasattr(self, 'flask_app_provider'):
-            return self.flask_app_provider
-        self.flask_app_provider = FlaskApplicationProvider(self.load_builder())
-        return self.flask_app_provider
 
     def build_accessor(self, argument):
         arguments = self.arguments
@@ -146,29 +138,12 @@ def call(app_provider, route, cookie_jar=None, data=None, headers=None):
     pass
 
 
-@DocoptProvider.annotate(
-    'flask_app_provider',
-    host='host',
-    port='port',
-    no_debug='no_debug')
-def runserver(flask_app_provider, host=None, port=None, no_debug=None):
-    if no_debug is None:
-        debug = None
-    else:
-        debug = not no_debug
-    if port is not None:
-        port = int(port)
-    app = flask_app_provider.get_app()
-    app.run(host=host, port=port, debug=debug)
-
-
-@DocoptProvider.annotate('flask_app_provider')
+@DocoptProvider.annotate('app_provider')
 def shell(app_provider):
     with app_provider:
         app = app_provider.get_app()
-        with app.test_request_context():
-            with app_provider.build_request_provider() as provider:
-                code.interact(local=locals())
+        with app_provider.build_request_provider() as provider:
+            code.interact(local=locals())
 
 
 @DocoptProvider.annotate('builder')
@@ -181,15 +156,13 @@ def wsgi(path, file=None):
         "\n"
         "import importlib\n"
         "\n"
-        "from flask_kit import FlaskApplicationProvider\n"
-        "\n"
         "\n"
         "builder_name = '{builder_name}'\n"
         "modname, varname = builder_name.split(':', 1)\n"
         "module = importlib.import_module(modname)\n"
         "builder = getattr(module, varname)\n"
-        "app_provider = FlaskApplicationProvider(builder)\n"
-        "app = app_provider.get_wsgi()").format(
+        "raise NotImplementedError('work in progress')"
+        "app = None").format(
             builder_name=path,
             version_string=build_version_string())
     if file is None:
@@ -199,10 +172,10 @@ def wsgi(path, file=None):
 
 
 def build_version_string(version=None):
-    from flask_kit import __version__
+    from dip_kit import __version__
     if version is None:
         version = __version__
-    return 'flask-kit {}'.format(__version__)
+    return 'dip-kit {}'.format(__version__)
 
 
 def main(argv=None):

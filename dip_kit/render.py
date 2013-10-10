@@ -1,7 +1,5 @@
 import os
 
-from flask import render_template
-
 
 def relative_folder(path, folder='templates'):
     if os.path.isdir(path):
@@ -12,4 +10,4 @@ def relative_folder(path, folder='templates'):
 
 class RenderMixin(object):
     def get_render(self):
-        return render_template
+        raise NotImplementedError('render')

@@ -7,6 +7,8 @@ from werkzeug import check_password_hash, generate_password_hash
 from .relational import Base
 from .provider import RequestProvider
 
+# TODO: Consider a non-Werkzeug password hash.
+
 
 class User(Base):
     """A user login, with credentials and authentication."""

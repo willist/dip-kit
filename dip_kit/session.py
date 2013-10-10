@@ -3,7 +3,6 @@ import uuid
 
 from datetime import datetime
 
-import flask
 import jeni
 
 from sqlalchemy import Column, ForeignKey, TypeDecorator, TEXT
@@ -35,7 +34,7 @@ class JsonData(TypeDecorator):
 
 
 class Session(Base):
-    """A login session keyed by uuid, distinct from Flask session."""
+    """A login session keyed by uuid, distinct from web session."""
     __tablename__ = 'session'
 
     id = Column(Integer, primary_key=True)
@@ -84,10 +83,11 @@ class SessionMixin(object):
 
     def get_session(self, name=None):
         if not hasattr(self, 'session'):
-            # TODO: Move request session into own extensible hooks.
-            flask_session = flask.session._get_current_object()
-            session_uid = flask_session.get('session_uid')
-            load_session = self.partial(self.load_session)
+            # TODO: Add request-persisted session via extensible hooks.
+            # flask_session = flask.session._get_current_object()
+            # session_uid = flask_session.get('session_uid')
+            # load_session = self.partial(self.load_session)
+            session_uid = None
             self.session = load_session(session_uid)
         if self.session is jeni.UNSET:
             return jeni.UNSET
@@ -102,9 +102,11 @@ class SessionMixin(object):
     def close_session(self):
         if not hasattr(self, 'session'):
             return
-        # Persist session id in Flask session implementation.
-        flask_session = flask.session._get_current_object()
-        flask_session['session_uid'] = self.session['uid']
+
+        # TODO: Add request-persisted session via extensible hooks.
+        # flask_session = flask.session._get_current_object()
+        # flask_session['session_uid'] = self.session['uid']
+
         # Persist session data in Session model's table.
         if self.session != getattr(self, 'session_start', None):
             save_session = self.partial(self.save_session)

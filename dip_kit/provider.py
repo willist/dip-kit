@@ -1,7 +1,5 @@
 import jeni
 
-from werkzeug.datastructures import ImmutableDict
-
 from .log import LoggerMixin
 from .mail import MailerMixin
 from .relational import RelationalEngineMixin, RelationalQueryMixin
@@ -25,7 +23,7 @@ class ApplicationProvider(
     @property
     def config(self):
         if self.builder is None:
-            return ImmutableDict()
+            return None
         return self.builder.config
 
     def require_config_key(self, key, config=None):
