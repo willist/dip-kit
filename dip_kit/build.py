@@ -6,9 +6,11 @@ from .provider import ApplicationProvider
 class Builder(object):
     # TODO: Add hooks for add_url_rule, before_/after_request, errorhandler.
 
+    default_provider_class = ApplicationProvider
+
     def __init__(self, config=None, provider_class=None):
         if provider_class is None:
-            self.provider_class = ApplicationProvider
+            self.provider_class = self.default_provider_class
         else:
             self.provider_class = provider_class
 
