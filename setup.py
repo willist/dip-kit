@@ -44,4 +44,7 @@ setup(
     entry_points={
         'console_scripts': ['dip-kit = dip_kit.command:main'],
     },
+    extras_require={
+        'runserver': ['Werkzeug'],
+    },
     classifiers=CLASSIFIERS)

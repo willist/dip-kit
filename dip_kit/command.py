@@ -2,11 +2,13 @@
 
 Usage:
   dip-kit call [-c COOKIE_JAR] [-d FORMDATA...] [-H HEADER...] BUILDER ROUTE
+  dip-kit runserver [--host=HOST] [--port=PORT] [--no-debug] [-r] BUILDER
   dip-kit shell BUILDER
   dip-kit wsgi BUILDER
 
 Commands:
   call       Directly call the handler at a given route (non-HTTP/non-WSGI).
+  runserver  Run a development WSGI server with code-reloading & debugger.
   shell      Run Python interactive interpreter with a request provider.
   wsgi       Generate WSGI script to stdout for direct use with e.g. gunicorn.
              `dip-kit wsgi BUILDER > wsgi.py && gunicorn wsgi:app`
@@ -23,6 +25,7 @@ Options:
   -t HOST --host=HOST                    Host address for TCP bind.
   -p PORT --port=PORT                    Port for TCP bind.
   --no-debug                             Disable debug mode.
+  -r --no-reload                         Disable code reloading.
 """
 
 from __future__ import print_function
@@ -30,6 +33,7 @@ from __future__ import print_function
 import code
 import importlib
 import re
+import sys
 
 # TODO: Establish a cookie jar or flatfile alternative for `call` sessions.
 # try:
@@ -44,6 +48,10 @@ from docopt import docopt
 from dip_kit.provider import ApplicationProvider, RequestProvider
 from dip_kit.session import SessionMixin
 from dip_kit.user import UserMixin
+
+
+DEFAULT_HOST = '127.0.0.1'
+DEFAULT_PORT = 8000
 
 
 class CommandRequestProvider(SessionMixin, UserMixin, RequestProvider):
@@ -68,6 +76,8 @@ class DocoptProvider(jeni.BaseProvider):
         arguments = self.arguments
         if arguments['call'] is True:
             self.apply(call)
+        elif arguments['runserver'] is True:
+            self.apply(runserver)
         elif arguments['shell'] is True:
             self.apply(shell)
         elif arguments['wsgi'] is True:
@@ -140,6 +150,38 @@ def call(app_provider, route, cookie_jar=None, data=None, headers=None):
     pass
 
 
+@DocoptProvider.annotate(
+    'app_provider',
+    host='host',
+    port='port',
+    no_debug='no_debug',
+    no_reload='no_reload')
+def runserver(provider, host=None, port=None, no_debug=None, no_reload=None):
+    try:
+        from werkzeug.serving import run_simple
+    except ImportError:
+        msg = 'runserver command requires werkzeug: pip install werkzeug'
+        print(msg, file=sys.stderr)
+        sys.exit(1)
+
+    options = {}
+
+    if no_debug is not None:
+        options['use_debugger'] = not no_debug
+    if no_reload is not None:
+        options['use_reloader'] = not no_reload
+
+    if host is None:
+        host = DEFAULT_HOST
+    if port is None:
+        port = DEFAULT_PORT
+    else:
+        port = int(port)
+
+    app = provider.get_wsgi()
+    run_simple(host, port, app, **options)
+
+
 @DocoptProvider.annotate('app_provider')
 def shell(app_provider):
     with app_provider:
@@ -181,7 +223,6 @@ def build_version_string(version=None):
 
 
 def main(argv=None):
-    import sys
     if argv is None:
         argv = sys.argv[1:]
     version = build_version_string()
