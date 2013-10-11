@@ -35,7 +35,8 @@ class JsonData(TypeDecorator):
 
 class Session(Base):
     """A login session keyed by uuid, distinct from web session."""
-    __tablename__ = 'session'
+    # TODO: Make table name configurable.
+    __tablename__ = 'dip_session'
 
     id = Column(Integer, primary_key=True)
     uid = Column(String(36), default=uid_factory)

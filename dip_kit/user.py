@@ -12,7 +12,8 @@ from .provider import RequestProvider
 
 class User(Base):
     """A user login, with credentials and authentication."""
-    __tablename__ = 'user'
+    # TODO: Make table name configurable.
+    __tablename__ = 'dip_user'
 
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now)
