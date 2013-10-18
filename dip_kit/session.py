@@ -48,21 +48,23 @@ class Session(Base):
     user = relationship(User, lazy='joined', join_depth=1, viewonly=True)
 
 
-@RequestProvider.annotate('relational_session')
-def start_session(db, user, cls=Session):
-    session = cls(user_id=user.id)
-    db.add(session)
-    db.flush()
-    session.data = {'uid': session.uid}
-    return session
+    @classmethod
+    @RequestProvider.annotate('relational_session')
+    def start(cls, db, user):
+        session = cls(user_id=user.id)
+        db.add(session)
+        db.flush()
+        session.data = {'uid': session.uid}
+        return session
 
 
-@RequestProvider.annotate('relational_query', 'session:session_uid')
-def end_session(query, session_uid, cls=Session):
-    rowcount = query(cls).filter_by(uid=session_uid).delete()
-    if rowcount == 0:
-        raise ValueError('No session records for {}.'.format(session_uid))
-    return rowcount
+    @classmethod
+    @RequestProvider.annotate('relational_query', 'session:session_uid')
+    def end(cls, session_uid):
+        rowcount = query(cls).filter_by(uid=session_uid).delete()
+        if rowcount == 0:
+            raise ValueError('No session records for {}.'.format(session_uid))
+        return rowcount
 
 
 class SessionMixin(object):
