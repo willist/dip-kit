@@ -3,7 +3,7 @@
 Usage:
   dip-kit call [-c COOKIE_JAR] [-d FORMDATA...] [-H HEADER...] BUILDER ROUTE
   dip-kit runserver [--host=HOST] [--port=PORT] [--no-debug] [-r] BUILDER
-  dip-kit shell BUILDER
+  dip-kit shell BUILDER [NOTE...]
   dip-kit wsgi BUILDER
 
 Commands:
@@ -16,6 +16,7 @@ Commands:
 Arguments:
   BUILDER  Dotted path MODULE_NAME:VARIABLE_NAME referencing Builder instance.
   ROUTE    URL-like path to route of handler to call, starting with '/'.
+  NOTE     Annotations to fulfill & provide in shell context.
 
 Options:
   -h --help                              Show this help message, then exit.
@@ -197,13 +198,33 @@ def load_rlcompleter(context=None):
     return True
 
 
-@DocoptProvider.annotate('app_provider')
-def shell(app_provider, use_rlcompleter=True):
+def provide_notes(provider, notes, fill_none=True):
+    if not notes:
+        return {}
+    names = []
+    for note in notes:
+        object_name, name = provider.parse_note(note)
+        if name is None:
+            names.append(object_name)
+        else:
+            names.append(name)
+    keyword_notes = dict(zip(names, notes))
+    _, kw = provider.resolve_notes(**keyword_notes)
+    if fill_none:
+        for name in keyword_notes:
+            if name not in kw:
+                kw[name] = None
+    return kw
+
+
+@DocoptProvider.annotate('app_provider', notes='note')
+def shell(app_provider, notes=None, use_rlcompleter=True):
     with app_provider:
         app = app_provider.get_app()
         with app_provider.build_request_provider() as provider:
             context = locals()
-            if use_rlcompleter:
+            context.update(provide_notes(provider, notes))
+            if context.pop('use_rlcompleter', False):
                 load_rlcompleter(context)
             code.interact(local=context)
 
