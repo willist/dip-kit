@@ -30,6 +30,9 @@ class ApplicationProvider(
         """Methods requiring config should use this. Raises KeyError."""
         if config is None:
             config = self.config
+        if config is None:
+            msg = 'ApplicationProvider config is empty, no {}.'.format(key)
+            raise KeyError(msg)
         if key not in config:
             msg = '{} is missing in ApplicationProvider config'.format(key)
             raise KeyError(msg)
