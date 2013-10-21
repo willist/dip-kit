@@ -52,7 +52,7 @@ class SessionModelMixin(object):
 
     @classmethod
     @RequestProvider.annotate('relational_query', 'session:session_uid')
-    def end(cls, session_uid):
+    def end(cls, query, session_uid):
         rowcount = query(cls).filter_by(uid=session_uid).delete()
         if rowcount == 0:
             raise ValueError('No session records for {}.'.format(session_uid))
