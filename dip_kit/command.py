@@ -182,12 +182,30 @@ def runserver(provider, host=None, port=None, no_debug=None, no_reload=None):
     run_simple(host, port, app, **options)
 
 
+def load_rlcompleter(context=None):
+    try:
+        import readline
+    except ImportError:
+        return False
+    import rlcompleter
+    if context is None:
+        completer = rlcompleter.Completer()
+    else:
+        completer = rlcompleter.Completer(context)
+    readline.set_completer(completer.complete)
+    readline.parse_and_bind("tab: complete")
+    return True
+
+
 @DocoptProvider.annotate('app_provider')
-def shell(app_provider):
+def shell(app_provider, use_rlcompleter=True):
     with app_provider:
         app = app_provider.get_app()
         with app_provider.build_request_provider() as provider:
-            code.interact(local=locals())
+            context = locals()
+            if use_rlcompleter:
+                load_rlcompleter(context)
+            code.interact(local=context)
 
 
 @DocoptProvider.annotate('builder')
