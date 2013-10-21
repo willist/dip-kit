@@ -38,15 +38,15 @@ class Session(Base):
     # TODO: Make table name configurable.
     __tablename__ = 'dip_session'
 
-    id = Column(Integer, primary_key=True)
-    uid = Column(String(36), default=uid_factory)
+    id = Column(Integer, primary_key=True, index=True)
+    uid = Column(String(36), default=uid_factory, index=True)
     created = Column(DateTime, default=datetime.now)
     modified = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     data = Column(JsonData, nullable=True)
 
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    # TODO: Add hook to use a custom User model.
+    user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
     user = relationship(User, lazy='joined', join_depth=1, viewonly=True)
-
 
     @classmethod
     @RequestProvider.annotate('relational_session')
@@ -56,7 +56,6 @@ class Session(Base):
         db.flush()
         session.data = {'uid': session.uid}
         return session
-
 
     @classmethod
     @RequestProvider.annotate('relational_query', 'session:session_uid')
