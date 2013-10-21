@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import synonym
 from werkzeug import check_password_hash, generate_password_hash
 
@@ -10,11 +11,8 @@ from .provider import RequestProvider
 # TODO: Consider a non-Werkzeug password hash.
 
 
-class User(Base):
+class UserModelMixin(object):
     """A user login, with credentials and authentication."""
-    # TODO: Make table name configurable.
-    __tablename__ = 'dip_user'
-
     id = Column(Integer, primary_key=True)
     created = Column(DateTime, default=datetime.now)
     modified = Column(DateTime, default=datetime.now, onupdate=datetime.now)
@@ -34,7 +32,10 @@ class User(Base):
         self._password = generate_password_hash(password)
 
     password_descriptor = property(_get_password, _set_password)
-    password = synonym('_password', descriptor=password_descriptor)
+
+    @declared_attr
+    def password(self):
+        return synonym('_password', descriptor=self.password_descriptor)
 
     def check_password(self, password):
         if self.password is None:
@@ -53,6 +54,10 @@ class User(Base):
         if not user.active:
             return user, False
         return user, user.check_password(password)
+
+
+class User(UserModelMixin, Base):
+    __tablename__ = 'dip_user'
 
 
 class UserMixin(object):

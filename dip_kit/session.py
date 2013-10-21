@@ -33,20 +33,13 @@ class JsonData(TypeDecorator):
         return value
 
 
-class Session(Base):
+class SessionModelMixin(object):
     """A login session keyed by uuid, distinct from web session."""
-    # TODO: Make table name configurable.
-    __tablename__ = 'dip_session'
-
     id = Column(Integer, primary_key=True, index=True)
     uid = Column(String(36), default=uid_factory, index=True)
     created = Column(DateTime, default=datetime.now)
     modified = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     data = Column(JsonData, nullable=True)
-
-    # TODO: Add hook to use a custom User model.
-    user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
-    user = relationship(User, lazy='joined', join_depth=1, viewonly=True)
 
     @classmethod
     @RequestProvider.annotate('relational_session')
@@ -64,6 +57,13 @@ class Session(Base):
         if rowcount == 0:
             raise ValueError('No session records for {}.'.format(session_uid))
         return rowcount
+
+
+class Session(SessionModelMixin, Base):
+    __tablename__ = 'dip_session'
+
+    user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
+    user = relationship(User, lazy='joined', join_depth=1, viewonly=True)
 
 
 class SessionMixin(object):
