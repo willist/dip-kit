@@ -14,6 +14,9 @@ from .provider import ApplicationProvider, RequestProvider
 
 __version__ = '0.1-dev'
 __all__ = [
+    'ApplicationProvider',
+    'Builder',
+    'RequestProvider',
     'build',
     'command',
     'log',
@@ -23,7 +26,4 @@ __all__ = [
     'render',
     'session',
     'user',
-    'ApplicationProvider',
-    'Builder',
-    'RequestProvider',
 ]
