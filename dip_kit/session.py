@@ -74,8 +74,12 @@ class Session(SessionModelMixin, Base):
 
 
 class SessionMixin(object):
+    def get_session_model(self):
+        return Session
+
     @RequestProvider.annotate('relational_query')
     def load_session(self, query, session_uid):
+        Session = self.get_session_model()
         session = query(Session).filter_by(uid=session_uid).first()
         if session is None:
             return jeni.UNSET
@@ -83,6 +87,7 @@ class SessionMixin(object):
 
     @RequestProvider.annotate('relational_session', 'relational_query')
     def save_session(self, db, query, data):
+        Session = self.get_session_model()
         session = query(Session).filter_by(uid=data['uid']).first()
         if session is None:
             session = Session(uid=data['uid'])
