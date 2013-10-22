@@ -184,10 +184,29 @@ def runserver(provider, host=None, port=None, no_debug=None, no_reload=None):
 
 
 def load_rlcompleter(context=None):
+    # See if readline is available.
     try:
         import readline
     except ImportError:
         return False
+
+    # Use cross-session history if environment variable is set.
+    # Q: Why environment? A: Where would we default the filepath to?
+    import os
+    histfile = os.environ.get('DIP_KIT_HISTFILE', None)
+    if histfile is not None:
+        try:
+            readline.read_history_file(histfile)
+        except IOError:
+            pass # Unable to read history file. It likely does not exist.
+        def write_history():
+            try:
+                readline.write_history_file(histfile)
+            except Exception:
+                pass # Silently fail. Unable to write to file.
+        import atexit
+        atexit.register(write_history)
+
     import rlcompleter
     if context is None:
         completer = rlcompleter.Completer()
