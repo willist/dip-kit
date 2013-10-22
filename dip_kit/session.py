@@ -43,8 +43,9 @@ class SessionModelMixin(object):
 
     @classmethod
     @RequestProvider.annotate('relational_session')
-    def start(cls, db, user):
-        session = cls(user_id=user.id)
+    def start(cls, db, owner):
+        session = cls()
+        session.set_owner(owner)
         db.add(session)
         db.flush()
         session.data = {'uid': session.uid}
@@ -58,12 +59,18 @@ class SessionModelMixin(object):
             raise ValueError('No session records for {}.'.format(session_uid))
         return rowcount
 
+    def set_owner(self, owner):
+        raise NotImplementedError('Provide relationship setter in subclass.')
+
 
 class Session(SessionModelMixin, Base):
     __tablename__ = 'dip_session'
 
     user_id = Column(Integer, ForeignKey(User.id), nullable=False, index=True)
     user = relationship(User, lazy='joined', join_depth=1, viewonly=True)
+
+    def set_owner(self, owner):
+        self.user_id = owner.id
 
 
 class SessionMixin(object):
