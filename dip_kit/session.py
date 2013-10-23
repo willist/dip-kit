@@ -52,7 +52,7 @@ class SessionModelMixin(object):
         return session
 
     @classmethod
-    @RequestProvider.annotate('relational_query', 'session:session_uid')
+    @RequestProvider.annotate('relational_query', 'session:uid')
     def end(cls, query, session_uid):
         rowcount = query(cls).filter_by(uid=session_uid).delete()
         if rowcount == 0:
@@ -115,6 +115,9 @@ class SessionMixin(object):
 
     def set_session(self, session):
         self.session = session
+
+    def clear_session(self):
+        self.session = jeni.UNSET
 
     def close_session(self):
         if not hasattr(self, 'session'):
