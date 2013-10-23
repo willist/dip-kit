@@ -57,7 +57,7 @@ class SessionModelMixin(object):
         rowcount = query(cls).filter_by(uid=session_uid).delete()
         if rowcount == 0:
             raise ValueError('No session records for {}.'.format(session_uid))
-        return rowcount
+        return session_uid
 
     def set_owner(self, owner):
         raise NotImplementedError('Provide relationship setter in subclass.')
