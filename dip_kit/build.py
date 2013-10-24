@@ -58,12 +58,12 @@ class Builder(object):
             return fn
         return decorator
 
-    def handle_error(self, error):
+    def handle_error(self, provider, error):
         exc_type, exc_value, tb = sys.exc_info()
         assert exc_value is error
         for typecheck, handler in self.errorhandlers.items():
             if isinstance(error, typecheck):
-                return handler(error)
+                return handler(provider, error)
         raise exc_type, exc_value, tb
 
     def before_request(self, fn):
