@@ -78,12 +78,12 @@ class SessionMixin(object):
         return Session
 
     @RequestProvider.annotate('relational_query')
-    def load_session(self, query, session_uid):
+    def load_session_record(self, query, session_uid):
         Session = self.get_session_model()
         session = query(Session).filter_by(uid=session_uid).first()
         if session is None:
             return jeni.UNSET
-        return session.data
+        return session
 
     @RequestProvider.annotate('relational_session', 'relational_query')
     def save_session(self, db, query, data):
@@ -104,14 +104,24 @@ class SessionMixin(object):
     def get_session(self, name=None):
         if not hasattr(self, 'session'):
             session_uid = self.get_session_uid()
-            load_session = self.partial(self.load_session)
-            self.session = load_session(session_uid)
+            load_session_record = self.partial(self.load_session_record)
+            self.session_record = load_session_record(session_uid)
+            if self.session_record is jeni.UNSET:
+                self.session = jeni.UNSET
+            else:
+                self.session = self.session_record.data
         if self.session is jeni.UNSET:
             return jeni.UNSET
         if name is not None:
             return self.session.get(name, jeni.UNSET)
         self.session_start = None
         return self.session
+
+    def get_session_record(self):
+        if hasattr(self, 'session_record'):
+            return self.session_record
+        self.get_session()
+        return self.session_record
 
     def set_session(self, session):
         self.session = session
