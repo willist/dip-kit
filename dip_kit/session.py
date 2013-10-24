@@ -39,6 +39,7 @@ class SessionModelMixin(object):
     uid = Column(String(36), default=uid_factory, index=True)
     created = Column(DateTime, default=datetime.now)
     modified = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    data_modified = Column(DateTime, default=datetime.now)
     data = Column(JsonData, nullable=True)
 
     @classmethod
@@ -93,6 +94,7 @@ class SessionMixin(object):
             session = Session(uid=data['uid'])
             db.add(session)
         session.data = data
+        session.data_modified = datetime.now()
         db.commit()
 
     def get_session_uid(self):
