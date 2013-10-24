@@ -81,20 +81,20 @@ class SessionMixin(object):
     @RequestProvider.annotate('relational_query')
     def load_session_record(self, query, session_uid):
         Session = self.get_session_model()
-        session = query(Session).filter_by(uid=session_uid).first()
-        if session is None:
+        session_record = query(Session).filter_by(uid=session_uid).first()
+        if session_record is None:
             return jeni.UNSET
-        return session
+        return session_record
 
     @RequestProvider.annotate('relational_session', 'relational_query')
     def save_session(self, db, query, data):
         Session = self.get_session_model()
-        session = query(Session).filter_by(uid=data['uid']).first()
-        if session is None:
-            session = Session(uid=data['uid'])
-            db.add(session)
-        session.data = data
-        session.data_modified = datetime.now()
+        session_record = query(Session).filter_by(uid=data['uid']).first()
+        if session_record is None:
+            session_record = Session(uid=data['uid'])
+            db.add(session_record)
+        session_record.data = data
+        session_record.data_modified = datetime.now()
         db.commit()
 
     def get_session_uid(self):
