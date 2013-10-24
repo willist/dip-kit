@@ -110,11 +110,11 @@ class SessionMixin(object):
                 self.session = jeni.UNSET
             else:
                 self.session = self.session_record.data
+                self.session_start = self.session
         if self.session is jeni.UNSET:
             return jeni.UNSET
         if name is not None:
             return self.session.get(name, jeni.UNSET)
-        self.session_start = None
         return self.session
 
     def get_session_record(self):
