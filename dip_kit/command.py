@@ -3,7 +3,7 @@
 Usage:
   dip-kit call [-c COOKIE_JAR] [-d FORMDATA...] [-H HEADER...] BUILDER ROUTE
   dip-kit runserver [--host=HOST] [--port=PORT] [--no-debug] [-r] BUILDER
-  dip-kit shell BUILDER [NOTE...]
+  dip-kit shell [--session-uid=SESSION_UID] BUILDER [NOTE...]
   dip-kit wsgi BUILDER
 
 Commands:
@@ -19,14 +19,15 @@ Arguments:
   NOTE     Annotations to fulfill & provide in shell context.
 
 Options:
-  -h --help                              Show this help message, then exit.
-  -c COOKIE_JAR --cookie-jar=COOKIE_JAR  Write cookies to this file.
-  -d FORMDATA --data=FORMDATA            Set form key/value like HTTP POST.
-  -H HEADER --header HEADER              Set HTTP-style header line.
-  -t HOST --host=HOST                    Host address for TCP bind.
-  -p PORT --port=PORT                    Port for TCP bind.
-  --no-debug                             Disable debug mode.
-  -r --no-reload                         Disable code reloading.
+  -h --help                                 Show this help message, then exit.
+  -c COOKIE_JAR --cookie-jar=COOKIE_JAR     Write cookies to this file.
+  -d FORMDATA --data=FORMDATA               Set form key/value like HTTP POST.
+  -H HEADER --header HEADER                 Set HTTP-style header line.
+  -t HOST --host=HOST                       Host address for TCP bind.
+  -p PORT --port=PORT                       Port for TCP bind.
+  -s SESSION_UID --session-uid=SESSION_UID  Session uid to load in Provider.
+  --no-debug                                Disable debug mode.
+  -r --no-reload                            Disable code reloading.
 """
 
 from __future__ import print_function
@@ -236,11 +237,16 @@ def provide_notes(provider, notes, fill_none=True):
     return kw
 
 
-@DocoptProvider.annotate('app_provider', notes='note')
-def shell(app_provider, notes=None, use_rlcompleter=True):
+@DocoptProvider.annotate(
+    'app_provider',
+    notes='note',
+    session_uid='session_uid')
+def shell(app_provider, notes=None, session_uid=None, use_rlcompleter=True):
     with app_provider:
         app = app_provider.get_app()
         with app_provider.build_request_provider() as provider:
+            if session_uid is not None:
+                provider.set_session_uid(session_uid)
             context = locals()
             context.update(provide_notes(provider, notes))
             if context.pop('use_rlcompleter', False):

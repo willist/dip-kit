@@ -101,6 +101,7 @@ class SessionMixin(object):
         raise NotImplementedError('Get persisted session uid via application.')
 
     def set_session_uid(self, session_uid):
+        # Note: This can be called at end of request or to load existing session.
         raise NotImplementedError('Persist session uid via application.')
 
     def get_session(self, name=None):
