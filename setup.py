@@ -35,7 +35,7 @@ setup(
         'SQLAlchemy>=0.6',
         'Werkzeug',
         'docopt>=0.6',
-        # TODO: 'jeni>=0.3',
+        'jeni>=0.3',
     ],
     entry_points={
         'console_scripts': ['dip-kit = dip_kit.command:main'],
