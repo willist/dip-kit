@@ -111,22 +111,11 @@ class Application(object, metaclass=abc.ABCMeta):
     def try_handle_request(self, injector_class, fn, plan):
         with injector_class() as injector:
             try:
-                # TODO: Flatten calls if jeni gets .apply buff.
                 for handler in plan.iter_before_request_handlers():
-                    if injector.has_annotations(handler):
-                        injector.apply(handler)
-                    else:
-                        handler()
-                if injector.has_annotations(fn):
-                    result = injector.apply(fn)
-                else:
-                    result = fn()
+                    injector.apply_regardless(handler)
+                result = injector.apply_regardless(fn)
                 for handler in plan.iter_after_request_handlers():
-                    if injector.has_annotations(handler):
-                        fn = injector.partial(handler)
-                    else:
-                        fn = handler
-                    fn(result)
+                    injector.apply_regardless(handler, result)
             except Exception as error:
                 try:
                     handled = self.handle_error(injector, plan, error)
@@ -142,11 +131,7 @@ class Application(object, metaclass=abc.ABCMeta):
         assert exc_value is error
         for error_type, handler in plan.iter_errorhandlers():
             if isinstance(error, error_type):
-                if injector.has_annotations(handler):
-                    fn = injector.partial(handler)
-                else:
-                    fn = handler
-                return fn(error)
+                injector.apply_regardless(handler, error)
         self.raise_error(exc_type, exc_value, tb)
 
     def raise_error(self, exc_type, exc_value, tb=None):
