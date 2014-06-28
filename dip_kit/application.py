@@ -78,6 +78,11 @@ class Application(object, metaclass=abc.ABCMeta):
                 url = url[len(unused_url):] # Strip unused_url.
             raise Redirect(url)
 
+    def apply_injector_registration(self, injector_class, plan):
+        for recipe_name, note, recipe_keywords in plan.iter_provider_data():
+            register = getattr(injector_class, recipe_name)
+            register(note, **recipe_keywords)
+
     def handle_request(self, *a, **kw):
         try:
             class Injector(self.injector_class):
@@ -86,7 +91,7 @@ class Application(object, metaclass=abc.ABCMeta):
             fn, arguments = self.match(path, method)
             # TODO: Put arguments into Injector, as well as url_for.
             plan = self.plan_map[fn]
-            # TODO: Apply plan injector registration.
+            self.apply_injector_registration(Injector, plan)
             response = self.try_handle_request(Injector, fn, plan)
             if response is None:
                 raise ValueError('Response is None.')

@@ -5,8 +5,6 @@ from .application import Application
 from .express import delegate_methods
 
 
-# TODO: Add injector registration APIs to Plan.
-
 class Plan(object):
     def __init__(self, config=None):
         self._prefix = None
@@ -20,6 +18,7 @@ class Plan(object):
         self.before_first_request_lock = Lock()
         self.after_request_fns = []
         self.errorhandlers = {}
+        self.provider_data = {}
 
     def update(self, plan):
         self.config.update(plan.config)
@@ -30,6 +29,7 @@ class Plan(object):
             plan.before_first_request_fns + self.before_first_request_fns
         self.after_request_fns.extend(plan.after_request_fns)
         self.errorhandlers.update(plan.errorhandlers)
+        self.provider_data.update(plan.provider_data)
 
     def copy(self):
         # One-level deep shallow copy of registration data.
@@ -42,6 +42,7 @@ class Plan(object):
             copy.copy(self.before_first_request_fns)
         plan.after_request_fns = copy.copy(self.after_request_fns)
         plan.errorhandlers = copy.copy(self.errorhandlers)
+        plan.provider_data = copy.copy(self.provider_data)
         return plan
 
     def has_prefix(self):
@@ -110,6 +111,37 @@ class Plan(object):
         for fn in self.after_request_fns:
             yield fn
 
+    def provider(self, note, provider=None, name=False):
+        if provider is not None:
+            self._register_provider_data(
+                'provider', note, provider=provider, name=name)
+        else:
+            def decorator(x):
+                self._register_provider_data(
+                    'provider', note, provider=x, name=name)
+                return x
+            return decorator
+
+    def factory(self, note, fn=None):
+        if fn is not None:
+            self._register_provider_data('factory', note, fn=fn)
+        else:
+            def decorator(f):
+                self._register_provider_data('factory', note, fn=f)
+                return f
+            return decorator
+
+    def value(self, note, scalar):
+        self._register_provider_data('value', note, scalar=scalar)
+
+    def _register_provider_data(self, recipe_name, note, **recipe_keywords):
+        self.provider_data[note] = recipe_name, recipe_keywords
+
+    def iter_provider_data(self):
+        for note in self.provider_data:
+            recipe_name, recipe_keywords = self.provider_data[note]
+            yield recipe_name, note, recipe_keywords
+
 
 @delegate_methods
 class Builder(object):
@@ -124,6 +156,9 @@ class Builder(object):
             'before_request',
             'before_first_request',
             'after_request',
+            'provider',
+            'factory',
+            'value',
         ],
     }
 

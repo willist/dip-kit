@@ -1,23 +1,5 @@
 from dip_kit import Builder, Crew
-from jeni import Injector as BaseInjector
 from jeni import Provider, annotate
-
-
-class Injector(BaseInjector):
-    "Local namespace for injection."
-
-
-@Injector.provider('hello')
-class HelloProvider(Provider):
-    def get(self, name=None):
-        if name is None:
-            name = 'world'
-        return 'Hello, {}!'.format(name)
-
-
-@Injector.factory('eggs')
-def eggs():
-    return 'eggs!'
 
 
 builder = Builder()
@@ -75,10 +57,21 @@ def before3():
     print('@crew.before_request')
 
 
+@crew.provider('hello')
+class HelloProvider(Provider):
+    def get(self, name=None):
+        if name is None:
+            name = 'world'
+        return 'Hello, {}!'.format(name)
+
+
+@crew.factory('eggs')
+def eggs():
+    return 'eggs!'
+
+
 if __name__ == '__main__':
     # TODO: If dip-kit gets a reference implementation, use it here.
     from flask_kit import FlaskApplication
-    class Application(FlaskApplication):
-        injector_class = Injector
-    application = crew.build_application(Application)
+    application = crew.build_application(FlaskApplication)
     application.app.run(debug=True)
